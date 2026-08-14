@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FluentProvider,
   webLightTheme,
@@ -6,6 +6,7 @@ import {
   makeStyles,
   tokens,
   Button,
+  CompoundButton,
   Menu,
   MenuTrigger,
   MenuPopover,
@@ -14,22 +15,26 @@ import {
 } from "@fluentui/react-components";
 import {
   CodeRegular,
-  MailRegular,
+  ArrowDownRegular,
+  StoreMicrosoftFilled,
+  ChatHelpRegular,
+  DocumentLinkRegular,
   WeatherSunnyRegular,
   WeatherMoonRegular,
   PaintBrushRegular,
   LocalLanguageGlobeRegular,
 } from "@fluentui/react-icons";
 import mascotIcon from "./assets/mascot-icon.png";
+import acesIcon from "./assets/aces-icon.png";
 import bgImage from "./assets/background.jpg";
 import policeIcon from "./assets/police-icon.png";
 import { I18nProvider, useI18n } from "./i18n";
 
 const useStyles = makeStyles({
   wrapper: {
-    minHeight: "100vh",
+    height: "100vh",
     display: "flex",
-    alignItems: "center",
+    flexDirection: "column",
     position: "relative",
     backgroundImage: `url(${bgImage})`,
     backgroundSize: "cover",
@@ -38,17 +43,14 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground3,
   },
   titleBar: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
+    flexShrink: 0,
     height: "56px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     padding: "0 24px",
     zIndex: 2,
-    "@media (max-width: 768px)": {
+    "@media (max-width: 600px)": {
       padding: "0 16px",
     },
   },
@@ -73,24 +75,53 @@ const useStyles = makeStyles({
     display: "flex",
     gap: "8px",
   },
+  scrollArea: {
+    flex: 1,
+    minHeight: 0,
+    overflowY: "auto",
+    position: "relative",
+  },
   hero: {
-    width: "50%",
-    marginLeft: "auto",
+    position: "relative",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
     padding: "48px 56px",
-    textAlign: "left",
-    borderRadius: "8px 0 0 8px",
-    "@media (max-width: 768px)": {
-      width: "100%",
-      marginLeft: 0,
+    "@media (max-width: 600px)": {
       padding: "32px 24px",
-      borderRadius: 0,
-      borderLeft: "none",
-      borderRight: "none",
+    },
+  },
+  sectionContent: {
+    width: "100%",
+    maxWidth: "760px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  moreBtn: {
+    position: "absolute",
+    bottom: "32px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 5,
+  },
+  moreBtnCorner: {
+    position: "absolute",
+    right: "24px",
+    bottom: "24px",
+    zIndex: 5,
+    "@media (max-width: 600px)": {
+      right: "16px",
+      bottom: "16px",
     },
   },
   brand: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "center",
   },
   brandIcon: {
     height: "32px",
@@ -114,42 +145,44 @@ const useStyles = makeStyles({
   },
   actions: {
     display: "flex",
+    justifyContent: "center",
     gap: "12px",
     flexWrap: "wrap",
-  },
-  actionBtn: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "6px",
-    minWidth: "120px",
-    fontSize: tokens.fontSizeBase300,
-    fontWeight: tokens.fontWeightRegular,
-    fontFamily: tokens.fontFamilyBase,
-    lineHeight: "20px",
-    "& svg": {
-      width: "24px",
-      height: "24px",
+    "@media (max-width: 600px)": {
+      display: "grid",
+      justifyContent: "center",
     },
   },
-  footer: {
-    fontSize: "14px",
+  bottomBar: {
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "16px",
+    flexWrap: "wrap",
+    padding: "8px 24px",
+    zIndex: 10,
+    "@media (max-width: 768px)": {
+      flexDirection: "column-reverse",
+      alignItems: "center",
+      justifyContent: "center",
+      rowGap: "4px",
+      padding: "8px 16px",
+    },
+  },
+  copyright: {
     margin: 0,
+    fontSize: "14px",
   },
   filing: {
-    position: "absolute",
-    bottom: "16px",
-    right: "16px",
     display: "flex",
     alignItems: "center",
     columnGap: "16px",
     rowGap: "4px",
     flexWrap: "wrap",
-    zIndex: 1,
     "@media (max-width: 768px)": {
-      left: "16px",
-      right: "16px",
-      bottom: "16px",
+      flexDirection: "column",
+      alignItems: "center",
       justifyContent: "center",
     },
   },
@@ -186,12 +219,21 @@ function AppContent() {
   const [systemDark, setSystemDark] = useState(
     () => window.matchMedia("(prefers-color-scheme: dark)").matches
   );
+  const [isLowHeight, setIsLowHeight] = useState(
+    () => window.innerHeight <= 640
+  );
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => setIsLowHeight(window.innerHeight <= 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const isDark = themeMode === "dark" || (themeMode === "system" && systemDark);
@@ -210,7 +252,135 @@ function AppContent() {
   const textColor = isDark ? "#ffffff" : "#000000";
   const cardBg = isDark ? "rgba(30,30,30,0.85)" : "rgba(255,255,255,0.8)";
   const cardBorder = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.2)";
-  const lineColor = isDark ? "#666666" : "#9a9a9a";
+  const maskBg = isDark ? "rgba(0, 0, 0, 0.5)" : "rgba(255, 255, 255, 0.4)";
+
+  const section2Ref = useRef<HTMLDivElement>(null);
+  const scrollToMore = () => {
+    section2Ref.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const mainContent = (
+    <>
+      <div className={styles.brand}>
+        <img
+          src={mascotIcon}
+          className={styles.brandIcon}
+          alt="Mascot Lab"
+        />
+        <h2 className={styles.brandName} style={{ color: textColor }}>Mascot Lab</h2>
+      </div>
+
+      <p className={styles.title} style={{ color: textColor }}>{t.title}</p>
+
+      <div className={styles.actions}>
+        <CompoundButton
+          as="a"
+          href="https://github.com/mascot-lab"
+          target="_blank"
+          rel="noopener noreferrer"
+          secondaryContent="@mascot-lab"
+          icon={<CodeRegular />}
+        >
+          Mascot Lab
+        </CompoundButton>
+        <CompoundButton
+          as="a"
+          href="https://github.com/cyprinus-carpio"
+          target="_blank"
+          rel="noopener noreferrer"
+          secondaryContent="@cyprinus-carpio"
+          icon={<CodeRegular />}
+        >
+          {t.githubBtn}
+        </CompoundButton>
+      </div>
+    </>
+  );
+
+  const acesContent = (
+    <>
+      <div className={styles.brand}>
+        <img
+          src={acesIcon}
+          className={styles.brandIcon}
+          alt="Anti-Cheat Exam System"
+        />
+        <h2 className={styles.brandName} style={{ color: textColor }}>{t.acesName}</h2>
+      </div>
+
+      <p className={styles.title} style={{ color: textColor }}>{t.acesDesc}</p>
+
+      <div className={styles.actions}>
+        <CompoundButton
+          as="a"
+          href="https://apps.microsoft.com/detail/9P8KZRS8JBX3"
+          target="_blank"
+          rel="noopener noreferrer"
+          appearance="primary"
+          secondaryContent={t.acesStoreSecondary}
+          icon={<StoreMicrosoftFilled />}
+        >
+          {t.acesStore}
+        </CompoundButton>
+        <CompoundButton
+          as="a"
+          href="https://aces.mascot-lab.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          secondaryContent="aces.mascot-lab.com"
+          icon={<DocumentLinkRegular />}
+        >
+          {t.acesDocs}
+        </CompoundButton>
+        <CompoundButton
+          as="a"
+          href="https://github.com/mascot-lab/anti-cheat-exam-system/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          secondaryContent={t.acesFeedbackSecondary}
+          icon={<ChatHelpRegular />}
+        >
+          {t.acesFeedback}
+        </CompoundButton>
+      </div>
+    </>
+  );
+
+  const bottomBarEl = (
+    <div
+      className={styles.bottomBar}
+      style={{
+        color: textColor,
+        backgroundColor: cardBg,
+        borderTop: `1px solid ${cardBorder}`,
+      }}
+    >
+      <p className={styles.copyright}>{t.footer}</p>
+      <div className={styles.filing} style={{ color: textColor }}>
+        <a
+          className={styles.filingLink}
+          href="https://beian.miit.gov.cn/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          鄂 ICP 备 2026041682 号 - 1
+        </a>
+        <a
+          className={styles.filingLink}
+          href="https://beian.mps.gov.cn/#/query/webSearch?code=42050002421120"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src={policeIcon}
+            className={styles.policeIcon}
+            alt="公安备案图标"
+          />
+          鄂公网安备 42050002421120 号
+        </a>
+      </div>
+    </div>
+  );
 
   return (
     <FluentProvider theme={isDark ? webDarkTheme : webLightTheme}>
@@ -289,82 +459,35 @@ function AppContent() {
           </Menu>
           </div>
         </div>
-        <div
-          className={styles.hero}
-          style={{
-            backgroundColor: cardBg,
-            borderLeft: `1px solid ${cardBorder}`,
-            borderTop: `1px solid ${cardBorder}`,
-            borderBottom: `1px solid ${cardBorder}`,
-          }}
-        >
-          {/* Brand */}
-          <div className={styles.brand}>
-            <img
-              src={mascotIcon}
-              className={styles.brandIcon}
-              alt="Mascot Lab"
-            />
-            <h2 className={styles.brandName} style={{ color: textColor }}>Mascot Lab</h2>
-          </div>
-
-          {/* Title */}
-          <p className={styles.title} style={{ color: textColor }}>{t.title}</p>
-
-          <hr className={styles.divider} style={{ borderTopColor: lineColor }} />
-
-          {/* Buttons */}
-          <div className={styles.actions}>
+        {/* Section 1 */}
+        <div className={styles.scrollArea}>
+          <div className={styles.hero} style={{ backgroundColor: maskBg }}>
+            <div className={styles.sectionContent}>{mainContent}</div>
             <Button
-              appearance="primary"
-              size="large"
-              className={styles.actionBtn}
-              icon={<CodeRegular />}
-              onClick={() => window.open("https://github.com/cyprinus-carpio", "_blank")}
+              className={isLowHeight ? styles.moreBtnCorner : styles.moreBtn}
+              appearance="secondary"
+              icon={<ArrowDownRegular />}
+              onClick={scrollToMore}
             >
-              {t.githubBtn}
-            </Button>
-            <Button
-              size="large"
-              className={styles.actionBtn}
-              icon={<MailRegular />}
-              onClick={() => window.location.href = "mailto:Mascot0820@outlook.com"}
-            >
-              {t.contactBtn}
+              {t.seeMore}
             </Button>
           </div>
 
-          <hr className={styles.divider} style={{ borderTopColor: lineColor }} />
+          {/* Section 2 */}
+          <div
+            ref={section2Ref}
+            className={styles.hero}
+            style={{ backgroundColor: maskBg }}
+          >
+            <div className={styles.sectionContent}>{acesContent}</div>
+          </div>
 
-          <p className={styles.footer} style={{ color: textColor }}>
-            {t.footer}
-          </p>
+          {/* Bottom bar shown only at the very bottom on short viewports */}
+          {isLowHeight && bottomBarEl}
         </div>
 
-        {/* Filing info (ICP & Public Security) */}
-        <div className={styles.filing} style={{ color: "#000000" }}>
-          <a
-            className={styles.filingLink}
-            href="https://beian.miit.gov.cn/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            鄂 ICP 备 2026041682 号 - 1
-          </a>
-          <a
-            className={styles.filingLink}
-            href="https://beian.mps.gov.cn/#/query/webSearch?code=42050002421120"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src={policeIcon}
-              className={styles.policeIcon}
-              alt="公安备案图标"
-            />
-            鄂公网安备 42050002421120 号
-          </a>
-        </div>
+        {/* Bottom bar docked normally */}
+        {!isLowHeight && bottomBarEl}
       </div>
     </FluentProvider>
   );
