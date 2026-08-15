@@ -36,11 +36,23 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     position: "relative",
-    backgroundImage: `url(${bgImage})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
+    overflow: "hidden",
     backgroundColor: tokens.colorNeutralBackground3,
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      top: "-20%",
+      bottom: "-20%",
+      left: 0,
+      right: 0,
+      zIndex: 0,
+      backgroundImage: `url(${bgImage})`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+      filter: "blur(var(--bg-blur, 0px))",
+      transform: "scale(1.06) translateY(var(--bg-parallax, 0px))",
+    },
   },
   titleBar: {
     flexShrink: 0,
@@ -80,6 +92,7 @@ const useStyles = makeStyles({
     minHeight: 0,
     overflowY: "auto",
     position: "relative",
+    zIndex: 1,
   },
   hero: {
     position: "relative",
@@ -256,7 +269,28 @@ function AppContent() {
 
   const section2Ref = useRef<HTMLDivElement>(null);
   const scrollToMore = () => {
-    section2Ref.current?.scrollIntoView({ behavior: "smooth" });
+    const area = scrollAreaRef.current;
+    if (!area) return;
+    area.scrollTo({
+      top: section2Ref.current?.offsetTop ?? area.scrollHeight,
+      behavior: "smooth",
+    });
+  };
+
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const MAX_BLUR = 12;
+  const PARALLAX = 0.15;
+
+  const handleScroll = () => {
+    const el = scrollAreaRef.current;
+    if (!el) return;
+    const w = wrapperRef.current;
+    if (!w) return;
+    const max = el.scrollHeight - el.clientHeight;
+    const ratio = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0;
+    w.style.setProperty("--bg-blur", `${Math.round(ratio * MAX_BLUR)}px`);
+    w.style.setProperty("--bg-parallax", `${Math.round(-el.scrollTop * PARALLAX)}px`);
   };
 
   const mainContent = (
@@ -384,7 +418,7 @@ function AppContent() {
 
   return (
     <FluentProvider theme={isDark ? webDarkTheme : webLightTheme}>
-      <div className={styles.wrapper}>
+      <div ref={wrapperRef} className={styles.wrapper}>
         {/* Top title bar */}
         <div
           className={styles.titleBar}
@@ -460,7 +494,7 @@ function AppContent() {
           </div>
         </div>
         {/* Section 1 */}
-        <div className={styles.scrollArea}>
+        <div ref={scrollAreaRef} onScroll={handleScroll} className={styles.scrollArea}>
           <div className={styles.hero} style={{ backgroundColor: maskBg }}>
             <div className={styles.sectionContent}>{mainContent}</div>
             <Button
